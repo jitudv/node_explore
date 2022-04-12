@@ -1,45 +1,30 @@
 var fs = require('fs');
 var crypto = require('crypto');
-var excel_handlers  = require('./services/excel_handler')
 var ExcelJS = require('exceljs');
-const { checksum } = require('./services/excel_handler');
 
-test = async (excelFile) =>
-{
-//  var headres  =  await  excel_handlers.getHeaders(excelFile)
-//  console.log('headres ---->>  ',headres)
-//  var checksum =  await excel_handlers.checksum(excelFile)
-//  console.log('checksum   ---->>  ',checksum)
-// var  rowCount = await excel_handlers.getTrailers(excelFile)
-//  console.log('trailers  ---->> ',rowCount)
-}
+const aws = require('aws-sdk');
+const s3 = new aws.S3({ apiVersion: '2006-03-01' });
 
-test('file_example_XLSX_10.xlsx')
-console.log('yes its working  ')
+exports.handler = async (event, context) => {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    const bucket = event.Records[0].s3.bucket.name;
+    const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
+    const params = {
+        Bucket: bucket,
+        Key: key,
+    }; 
+    try {
+        const { ContentType } = await s3.getObject(params).promise();
+        console.log('CONTENT TYPE:', ContentType);
+        return ContentType;
+    } catch (err) {
+        console.log(err);
+        const message = `Error getting object ${key} from bucket ${bucket}. Make sure they exist and your bucket is in the same region as this function.`;
+        console.log(message);
+        throw new Error(message);
+    }
+};
+   
 
 
 fs.readFile('package.json', function(err, data) {
@@ -71,3 +56,22 @@ workbook.xlsx.readFile('file_example_XLSX_10.xlsx').then(() => {
   console.log("number of rows --->> ",sheet.actualRowCount);
 });
 
+
+
+{
+  "name": "FileValidatorLambda",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "dipeeka",
+  "license": "ISC",
+  "dependencies": {
+    "core-js": "^2.6.5",
+    "core.js": "^0.4.2",
+    "exceljs": "^4.3.0",
+    "install": "^0.13.0",
+    "update": "^0.7.4"
+  }
+}
