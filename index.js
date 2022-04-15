@@ -75,3 +75,29 @@ workbook.xlsx.readFile('file_example_XLSX_10.xlsx').then(() => {
     "update": "^0.7.4"
   }
 }
+
+const crypto = require('crypto');
+const fs = require('fs');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+exports.handler = (event, context, callback) => {
+  let params = {
+    Bucket: 'bucket_name',
+    Key: 'key',
+  };
+
+  let hash = crypto.createHash('md5');
+  let stream = s3.getObject(params).createReadStream();
+  stream.on('data', (data) => {
+    hash.update(data);
+  });
+
+  stream.on('end', () => {
+    let digest = hash.digest('hex');
+    console.log(digest);
+    callback(null, digest);
+  });
+};
+
+
